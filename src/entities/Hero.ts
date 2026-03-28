@@ -27,7 +27,8 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
 
     this.config = config;
-    this.setScale(3);
+    this.setOrigin(config.originX, config.originY);
+    this.setScale(2.5);
     (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
     if (config.hasDashDust) {

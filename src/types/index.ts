@@ -14,8 +14,10 @@ export interface HeroConfig {
   name: string;
   speed: number;
   health: number;
-  selectFolder: 'Character Select' | 'Select';
+  selectFolder: 'Select';
   hasDashDust: boolean;
+  originX: number;   // normalised horizontal anchor of character centre within frame
+  originY: number;   // normalised vertical anchor
   anims: Record<HeroState, HeroAnimDef>;
 }
 

@@ -6,8 +6,10 @@ export const HERO_CONFIGS: HeroConfig[] = [
     name: 'Hero 1',
     speed: 220,
     health: 100,
-    selectFolder: 'Character Select',
+    selectFolder: 'Select',
     hasDashDust: true,
+    originX: 0.45,
+    originY: 0.69,
     anims: {
       idle:   { frameCount: 4,  frameRate: 8,  repeat: -1, padded: false },
       run:    { frameCount: 5,  frameRate: 10, repeat: -1, padded: false },
@@ -24,6 +26,8 @@ export const HERO_CONFIGS: HeroConfig[] = [
     health: 100,
     selectFolder: 'Select',
     hasDashDust: false,
+    originX: 0.45,
+    originY: 0.70,
     anims: {
       idle:   { frameCount: 4,  frameRate: 8,  repeat: -1, padded: true },
       run:    { frameCount: 5,  frameRate: 10, repeat: -1, padded: true },
@@ -40,6 +44,8 @@ export const HERO_CONFIGS: HeroConfig[] = [
     health: 100,
     selectFolder: 'Select',
     hasDashDust: false,
+    originX: 0.45,
+    originY: 0.70,
     anims: {
       idle:   { frameCount: 4,  frameRate: 8,  repeat: -1, padded: true },
       run:    { frameCount: 5,  frameRate: 10, repeat: -1, padded: true },
@@ -56,6 +62,8 @@ export const HERO_CONFIGS: HeroConfig[] = [
     health: 100,
     selectFolder: 'Select',
     hasDashDust: true,
+    originX: 0.46,
+    originY: 0.71,
     anims: {
       idle:   { frameCount: 4,  frameRate: 8,  repeat: -1, padded: true },
       run:    { frameCount: 5,  frameRate: 10, repeat: -1, padded: true },
@@ -72,6 +80,8 @@ export const HERO_CONFIGS: HeroConfig[] = [
     health: 100,
     selectFolder: 'Select',
     hasDashDust: true,
+    originX: 0.46,
+    originY: 0.72,
     anims: {
       idle:   { frameCount: 4,  frameRate: 8,  repeat: -1, padded: true },
       run:    { frameCount: 5,  frameRate: 10, repeat: -1, padded: true },
@@ -88,6 +98,8 @@ export const HERO_CONFIGS: HeroConfig[] = [
     health: 100,
     selectFolder: 'Select',
     hasDashDust: true,
+    originX: 0.46,
+    originY: 0.72,
     anims: {
       idle:   { frameCount: 4,  frameRate: 8,  repeat: -1, padded: true },
       run:    { frameCount: 5,  frameRate: 10, repeat: -1, padded: true },
