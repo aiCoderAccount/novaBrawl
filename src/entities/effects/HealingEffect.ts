@@ -1,0 +1,24 @@
+import Phaser from 'phaser';
+import type { EffectConfig } from '../../types';
+import { Effect, type IEffectTarget } from './Effect';
+
+export class HealingEffect extends Effect {
+  private target: IEffectTarget;
+
+  constructor(scene: Phaser.Scene, target: IEffectTarget, config: EffectConfig) {
+    super(scene, target.x, target.y, config);
+    this.target = target;
+    this.playEffect();
+    this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, this.onComplete, this);
+  }
+
+  preUpdate(time: number, delta: number): void {
+    super.preUpdate(time, delta);
+    this.setPosition(this.target.x, this.target.y);
+  }
+
+  onComplete(): void {
+    this.target.heal?.(this.config.healAmount ?? 0);
+    this.destroy();
+  }
+}

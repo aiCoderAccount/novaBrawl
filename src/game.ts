@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { PreloadScene } from './scenes/PreloadScene';
 import { GameScene } from './scenes/GameScene';
 
 export function createGame(): Phaser.Game {
@@ -13,7 +14,7 @@ export function createGame(): Phaser.Game {
         debug: false,
       },
     },
-    scene: [GameScene],
+    scene: [PreloadScene, GameScene],
     parent: document.body,
     scale: {
       mode: Phaser.Scale.FIT,
