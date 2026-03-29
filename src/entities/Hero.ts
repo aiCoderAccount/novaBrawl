@@ -3,12 +3,14 @@ import type { HeroConfig, HeroState } from '../types';
 import type { Weapon } from './weapons/Weapon';
 
 const DASH_SPEED = 550;
+const JUMP_SCALE_PEAK = 2.6;
 
 export class Hero extends Phaser.Physics.Arcade.Sprite {
   readonly config: HeroConfig;
 
   private currentState: HeroState = 'idle';
   private isDashing = false;
+  private isJumping = false;
   private isAlive = true;
   private equippedWeapon: Weapon | null = null;
   private dustSprite: Phaser.GameObjects.Sprite | null = null;
@@ -18,6 +20,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     down: Phaser.Input.Keyboard.Key;
     left: Phaser.Input.Keyboard.Key;
     right: Phaser.Input.Keyboard.Key;
+    jump: Phaser.Input.Keyboard.Key;
   } | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: HeroConfig) {
@@ -31,7 +34,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     this.setScale(2);
     (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
-    this.dustSprite = scene.add.sprite(x, y, 'dash_dust_01');
+    this.dustSprite = scene.add.sprite(x, y, 'dust_dash-dust_01');
     this.dustSprite.setVisible(false);
 
     this.play(`hero_${config.id}_idle`, true);
@@ -43,19 +46,23 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
       down:  kb.addKey(Phaser.Input.Keyboard.KeyCodes.S),
       left:  kb.addKey(Phaser.Input.Keyboard.KeyCodes.A),
       right: kb.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+      jump:  kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
     };
   }
 
   update(): void {
     if (this.cursors) {
       this.handleMovement();
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.jump)) {
+        this.jump();
+      }
     }
     this.equippedWeapon?.update();
     this.dustSprite?.setPosition(this.x, this.y);
   }
 
   private handleMovement(): void {
-    if (!this.cursors || !this.isAlive || this.isDashing) return;
+    if (!this.cursors || !this.isAlive || this.isDashing || this.isJumping) return;
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     let vx = 0;
@@ -91,8 +98,36 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     this.play(`hero_${this.config.id}_${state}`, true);
   }
 
+  jump(): void {
+    if (this.isJumping || this.isDashing || !this.isAlive) return;
+    this.isJumping = true;
+
+    const jumpAnim = this.config.anims.jump;
+    const halfDuration = (jumpAnim.frameCount / jumpAnim.frameRate) * 500;
+
+    (this.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+    this.currentState = 'idle'; // allow transition
+    this.playAnimation('jump');
+
+    this.scene.tweens.add({
+      targets: this,
+      scaleX: JUMP_SCALE_PEAK,
+      scaleY: JUMP_SCALE_PEAK,
+      duration: halfDuration,
+      yoyo: true,
+      ease: 'Sine.easeInOut',
+    });
+
+    this.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      this.isJumping = false;
+      this.setScale(2);
+      this.currentState = 'jump'; // allow transition back to idle
+      this.playAnimation('idle');
+    });
+  }
+
   dash(directionX: number): void {
-    if (this.isDashing || !this.isAlive) return;
+    if (this.isDashing || this.isJumping || !this.isAlive) return;
     this.isDashing = true;
 
     const body = this.body as Phaser.Physics.Arcade.Body;
@@ -104,7 +139,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
 
     if (this.dustSprite) {
       this.dustSprite.setVisible(true).setPosition(this.x, this.y);
-      this.dustSprite.play('dash_dust', true);
+      this.dustSprite.play('dust_dash-dust', true);
       this.dustSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
         this.dustSprite?.setVisible(false);
       });
@@ -120,6 +155,8 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
   die(): void {
     if (!this.isAlive) return;
     this.isAlive = false;
+    this.isJumping = false;
+    this.setScale(2);
     (this.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
     this.currentState = 'idle'; // allow transition
     this.playAnimation('death');

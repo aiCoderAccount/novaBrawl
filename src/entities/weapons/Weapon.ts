@@ -17,7 +17,7 @@ export abstract class Weapon {
   constructor(scene: Phaser.Scene, config: WeaponConfig) {
     this.scene = scene;
     this.config = config;
-    this.sprite = scene.add.sprite(0, 0, `weapon_${config.id}_1`);
+    this.sprite = scene.add.sprite(0, 0, `weapon_${config.id}_01`);
     this.sprite.setVisible(false);
   }
 

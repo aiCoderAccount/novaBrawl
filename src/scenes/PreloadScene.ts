@@ -21,7 +21,7 @@ export class PreloadScene extends Phaser.Scene {
     this.loadDustFrames();
     this.loadWeaponFrames();
     this.loadBullets();
-    this.loadEffectFrames();
+    this.loadBuffFrames();
   }
 
   create(): void {
@@ -60,11 +60,14 @@ export class PreloadScene extends Phaser.Scene {
 
   private loadDustFrames(): void {
     for (const cfg of DUST_CONFIGS) {
-      const animKey = cfg.id.replace(/-/g, '_');
-      
+      const animKey = `dust_${cfg.id}`;
+
       for (let i = 1; i <= cfg.frameCount; i++) {
+        // Create the texture key
         const n = String(i).padStart(2, '0');
         const textureKey = `${animKey}_${n}`;
+
+        // Load image
         this.load.image(textureKey, `assets/effects/${cfg.id}/${textureKey}.png`);
         this.storeKey(animKey, textureKey);
       }
@@ -74,9 +77,14 @@ export class PreloadScene extends Phaser.Scene {
   private loadWeaponFrames(): void {
     for (const cfg of WEAPON_CONFIGS) {
       const animKey = `weapon_${cfg.id}`;
+
       for (let i = 1; i <= cfg.frameCount; i++) {
-        const textureKey = `weapon_${cfg.id}_${i}`;
-        this.load.image(textureKey, `assets/Weapons/${cfg.id}/${textureKey}.png`);
+        // Create the texture key
+        const n = String(i).padStart(2, '0');
+        const textureKey = `weapon_${cfg.id}_${n}`;
+
+        // Load image
+        this.load.image(textureKey, `assets/weapons/${cfg.id}/${textureKey}.png`);
         this.storeKey(animKey, textureKey);
       }
     }
@@ -85,17 +93,22 @@ export class PreloadScene extends Phaser.Scene {
   private loadBullets(): void {
     for (const cfg of WEAPON_CONFIGS) {
       if (cfg.bulletTextureKey) {
-        this.load.image(cfg.bulletTextureKey, `assets/Weapons/bullets/${cfg.bulletTextureKey}.png`);
+        this.load.image(cfg.bulletTextureKey, `assets/weapons/bullets/${cfg.bulletTextureKey}.png`);
       }
     }
   }
 
-  private loadEffectFrames(): void {
+  private loadBuffFrames(): void {
     for (const cfg of BUFF_CONFIGS) {
       const animKey = `effect_${cfg.id}`;
+
       for (let i = 1; i <= cfg.frameCount; i++) {
-        const textureKey = `effect_${cfg.id}_${i}`;
-        this.load.image(textureKey, `assets/Buffs/${cfg.id}/${textureKey}.png`);
+        // Create texture key
+        const n = String(i).padStart(2, '0');
+        const textureKey = `effect_${cfg.id}_${n}`;
+
+        // Load image
+        this.load.image(textureKey, `assets/buffs/${cfg.id}/${textureKey}.png`);
         this.storeKey(animKey, textureKey);
       }
     }
@@ -129,7 +142,7 @@ export class PreloadScene extends Phaser.Scene {
 
   private registerDustAnimation(): void {
     for (const cfg of DUST_CONFIGS) {
-      const animKey = cfg.id.replace(/-/g, '_');
+      const animKey = `dust_${cfg.id}`;
       const frames = this.frameKeyMap.get(animKey);
       if (!frames) continue;
       this.anims.create({
