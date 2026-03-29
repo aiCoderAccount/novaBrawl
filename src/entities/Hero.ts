@@ -28,10 +28,10 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
 
     this.config = config;
     this.setOrigin(config.originX, config.originY);
-    this.setScale(2.5);
+    this.setScale(2);
     (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
-    this.dustSprite = scene.add.sprite(x, y, `hero_${config.id}_dash_dust_01`);
+    this.dustSprite = scene.add.sprite(x, y, 'dash_dust_01');
     this.dustSprite.setVisible(false);
 
     this.play(`hero_${config.id}_idle`, true);
@@ -104,7 +104,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
 
     if (this.dustSprite) {
       this.dustSprite.setVisible(true).setPosition(this.x, this.y);
-      this.dustSprite.play(`hero_${this.config.id}_dash_dust`, true);
+      this.dustSprite.play('dash_dust', true);
       this.dustSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
         this.dustSprite?.setVisible(false);
       });

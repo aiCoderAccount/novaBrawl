@@ -24,8 +24,6 @@ export interface WeaponConfig {
   type: WeaponType;
   frameCount: number;
   frameRate: number;
-  assetFolder: string;      // disk folder under assets/Weapons/
-  assetFileStem: string;    // filename prefix before _N.png
   bulletTextureKey?: string;
   projectileSpeed?: number;
   damage: number;
@@ -41,14 +39,19 @@ export interface ProjectileConfig {
   lifespan: number;         // ms
 }
 
-export interface EffectConfig {
+export interface BuffConfig {
   id: string;               // e.g. 'buff-1'
   type: EffectType;
   frameCount: number;
   frameRate: number;
   repeat: number;
-  assetFolder: string;      // disk folder under assets/Buffs/
-  assetFileStem: string;    // filename prefix before _N.png
   statBoost?: Partial<{ speed: number; damage: number; defense: number }>;
   healAmount?: number;
+}
+
+export interface DustConfig {
+  id: string;               // e.g. 'dash-dust'
+  frameCount: number;
+  frameRate: number;
+  repeat: number;
 }

@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
-import type { EffectConfig } from '../../types';
+import type { BuffConfig } from '../../types';
 import { Effect, type IEffectTarget } from './Effect';
 
 export class HealingEffect extends Effect {
   private target: IEffectTarget;
 
-  constructor(scene: Phaser.Scene, target: IEffectTarget, config: EffectConfig) {
+  constructor(scene: Phaser.Scene, target: IEffectTarget, config: BuffConfig) {
     super(scene, target.x, target.y, config);
     this.target = target;
     this.playEffect();

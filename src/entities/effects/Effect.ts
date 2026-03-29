@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { EffectConfig } from '../../types';
+import type { BuffConfig } from '../../types';
 
 export interface IEffectTarget {
   x: number;
@@ -9,9 +9,9 @@ export interface IEffectTarget {
 }
 
 export abstract class Effect extends Phaser.GameObjects.Sprite {
-  readonly config: EffectConfig;
+  readonly config: BuffConfig;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, config: EffectConfig) {
+  constructor(scene: Phaser.Scene, x: number, y: number, config: BuffConfig) {
     super(scene, x, y, `effect_${config.id}_1`);
     scene.add.existing(this);
     this.config = config;
