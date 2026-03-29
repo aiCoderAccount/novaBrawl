@@ -6,18 +6,7 @@ import type { HeroState } from '../types';
 
 const HERO_STATES: HeroState[] = ['idle', 'run', 'jump', 'dash', 'death', 'select'];
 
-// Maps HeroState to the disk folder name (select is handled per-hero via config)
 const STATE_FOLDER: Record<HeroState, string> = {
-  idle:   'Idle',
-  run:    'Run',
-  jump:   'Jump',
-  dash:   'Dash',
-  death:  'Death',
-  select: '', // overridden by cfg.selectFolder
-};
-
-// Maps HeroState to the file name segment (always 'Select' regardless of folder name)
-const STATE_FILESTEM: Record<HeroState, string> = {
   idle:   'Idle',
   run:    'Run',
   jump:   'Jump',
@@ -35,7 +24,7 @@ export class PreloadScene extends Phaser.Scene {
     super({ key: 'PreloadScene' });
   }
 
-  preload(): void {
+  preload(): void { 
     this.loadHeroFrames();
     this.loadWeaponFrames();
     this.loadBullets();
@@ -59,15 +48,19 @@ export class PreloadScene extends Phaser.Scene {
   // ─── Loading ──────────────────────────────────────────────────────────────
 
   private loadHeroFrames(): void {
+    // Loop through every Hero config and every animation for that hero
     for (const cfg of HERO_CONFIGS) {
       for (const state of HERO_STATES) {
-        const animDef = cfg.anims[state];
-        const folder = state === 'select' ? cfg.selectFolder : STATE_FOLDER[state];
-        const fileStem = `Hero-${cfg.id}-${STATE_FILESTEM[state]}`;
+        const animDef = cfg.anims[state];             
+        const folder = STATE_FOLDER[state]; 
+        
+        // External and internal filenames for a state animation 
+        const fileStem = `Hero-${cfg.id}-${folder}`;  
         const animKey = `hero_${cfg.id}_${state}`;
 
+        // Loop through each frame in that animation
         for (let i = 1; i <= animDef.frameCount; i++) {
-          const n = animDef.padded ? String(i).padStart(2, '0') : String(i);
+          const n = String(i).padStart(2, '0');
           const textureKey = `hero_${cfg.id}_${state}_${n}`;
           const path = `assets/heroes/Hero ${cfg.id}/${folder}/${fileStem}_${n}.png`;
           this.load.image(textureKey, path);
@@ -75,14 +68,13 @@ export class PreloadScene extends Phaser.Scene {
         }
       }
 
-      if (cfg.hasDashDust) {
-        const dustAnimKey = `hero_${cfg.id}_dash_dust`;
-        for (let i = 1; i <= 5; i++) {
-          const textureKey = `hero_${cfg.id}_dash_dust_${i}`;
-          const path = `assets/heroes/Hero ${cfg.id}/Dash/Dust/Dash-Dust_${i}.png`;
-          this.load.image(textureKey, path);
-          this.storeKey(dustAnimKey, textureKey);
-        }
+      const dustAnimKey = `hero_${cfg.id}_dash_dust`;
+      for (let i = 1; i <= 5; i++) {
+        const n = String(i).padStart(2, '0');
+        const textureKey = `hero_${cfg.id}_dash_dust_${n}`;
+        const path = `assets/heroes/Hero ${cfg.id}/Dash/Dust/Dash-Dust_${n}.png`;
+        this.load.image(textureKey, path);
+        this.storeKey(dustAnimKey, textureKey);
       }
     }
   }
@@ -152,17 +144,15 @@ export class PreloadScene extends Phaser.Scene {
         });
       }
 
-      if (cfg.hasDashDust) {
-        const dustAnimKey = `hero_${cfg.id}_dash_dust`;
-        const frames = this.frameKeyMap.get(dustAnimKey);
-        if (frames) {
-          this.anims.create({
-            key: dustAnimKey,
-            frames: frames.map(k => ({ key: k })),
-            frameRate: 10,
-            repeat: 0,
-          });
-        }
+      const dustAnimKey = `hero_${cfg.id}_dash_dust`;
+      const dustFrames = this.frameKeyMap.get(dustAnimKey);
+      if (dustFrames) {
+        this.anims.create({
+          key: dustAnimKey,
+          frames: dustFrames.map(k => ({ key: k })),
+          frameRate: 10,
+          repeat: 0,
+        });
       }
     }
   }

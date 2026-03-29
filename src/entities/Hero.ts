@@ -21,7 +21,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
   } | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: HeroConfig) {
-    const firstIdleKey = `hero_${config.id}_idle_${config.anims.idle.padded ? '01' : '1'}`;
+    const firstIdleKey = `hero_${config.id}_idle_01`;
     super(scene, x, y, firstIdleKey);
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -31,10 +31,8 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     this.setScale(2.5);
     (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
-    if (config.hasDashDust) {
-      this.dustSprite = scene.add.sprite(x, y, `hero_${config.id}_dash_dust_1`);
-      this.dustSprite.setVisible(false);
-    }
+    this.dustSprite = scene.add.sprite(x, y, `hero_${config.id}_dash_dust_01`);
+    this.dustSprite.setVisible(false);
 
     this.play(`hero_${config.id}_idle`, true);
   }
@@ -104,7 +102,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     this.currentState = 'idle'; // allow transition
     this.playAnimation('dash');
 
-    if (this.dustSprite && this.config.hasDashDust) {
+    if (this.dustSprite) {
       this.dustSprite.setVisible(true).setPosition(this.x, this.y);
       this.dustSprite.play(`hero_${this.config.id}_dash_dust`, true);
       this.dustSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {

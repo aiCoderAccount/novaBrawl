@@ -6,7 +6,6 @@ export interface HeroAnimDef {
   frameCount: number;
   frameRate: number;
   repeat: number;    // -1 = loop, 0 = play once
-  padded: boolean;   // whether frame numbers are zero-padded to 2 digits
 }
 
 export interface HeroConfig {
@@ -14,8 +13,6 @@ export interface HeroConfig {
   name: string;
   speed: number;
   health: number;
-  selectFolder: 'Select';
-  hasDashDust: boolean;
   originX: number;   // normalised horizontal anchor of character centre within frame
   originY: number;   // normalised vertical anchor
   anims: Record<HeroState, HeroAnimDef>;
