@@ -5,42 +5,44 @@ export type EffectType = 'buff' | 'healing';
 export interface HeroAnimDef {
   frameCount: number;
   frameRate: number;
-  repeat: number;    // -1 = loop, 0 = play once
+  repeat: number;    
 }
 
 export interface HeroConfig {
-  id: number;                                   // 1–6
+  id: number;                                   
   name: string;
   speed: number;
   health: number;
-  originX: number;   // normalised horizontal anchor of character centre within frame
-  originY: number;   // normalised vertical anchor
+  originX: number;   
+  originY: number;   
   anims: Record<HeroState, HeroAnimDef>;
 }
 
 export interface WeaponConfig {
-  id: string;               // e.g. 'laser-beam'
+  id: string;
   displayName: string;
   type: WeaponType;
   frameCount: number;
   frameRate: number;
-  bulletTextureKey?: string;
+  bulletFrameKey?: string;
   projectileSpeed?: number;
   damage: number;
   projectileCount?: number;
   spreadDeg?: number;
   swingDurationMs?: number;
+  originX?: number;
+  originY?: number;
 }
 
 export interface ProjectileConfig {
   textureKey: string;
   speed: number;
   damage: number;
-  lifespan: number;         // ms
+  lifespan: number;       
 }
 
 export interface BuffConfig {
-  id: string;               // e.g. 'buff-1'
+  id: string;             
   type: EffectType;
   frameCount: number;
   frameRate: number;
@@ -50,7 +52,8 @@ export interface BuffConfig {
 }
 
 export interface DustConfig {
-  id: string;               // e.g. 'dash-dust'
+  id: string;
+  filePrefix?: string;
   frameCount: number;
   frameRate: number;
   repeat: number;

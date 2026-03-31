@@ -15,6 +15,7 @@ export class MeleeWeapon extends Weapon {
     this.sprite.play(`weapon_${this.config.id}`, true);
     this.sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
       this.isSwinging = false;
+      this.sprite.setTexture(`weapon_${this.config.id}_01`);
     });
   }
 }

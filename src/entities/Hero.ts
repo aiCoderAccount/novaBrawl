@@ -2,38 +2,45 @@ import Phaser from 'phaser';
 import type { HeroConfig, HeroState } from '../types';
 import type { Weapon } from './weapons/Weapon';
 
-const DASH_SPEED = 550;
-const JUMP_SCALE_PEAK = 2.6;
+const DASH_SPEED = 400;
+const JUMP_SCALE_PEAK = 2.2;
 
 export class Hero extends Phaser.Physics.Arcade.Sprite {
   readonly config: HeroConfig;
 
+  // Instance variables and starting values
   private currentState: HeroState = 'idle';
   private isDashing = false;
   private isJumping = false;
   private isAlive = true;
-  private equippedWeapon: Weapon | null = null;
+  private weapons: Weapon[] = [];
+  private activeWeaponIndex = 0;
   private dustSprite: Phaser.GameObjects.Sprite | null = null;
+  private dustOffsetX = 0;
 
+  // Hold reference to keys that control the hero
   private cursors: {
     up: Phaser.Input.Keyboard.Key;
     down: Phaser.Input.Keyboard.Key;
     left: Phaser.Input.Keyboard.Key;
     right: Phaser.Input.Keyboard.Key;
     jump: Phaser.Input.Keyboard.Key;
+    dash: Phaser.Input.Keyboard.Key;
+    switch: Phaser.Input.Keyboard.Key;
   } | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number, config: HeroConfig) {
-    const firstIdleKey = `hero_${config.id}_idle_01`;
-    super(scene, x, y, firstIdleKey);
+    // Create and register the sprite
+    super(scene, x, y, `hero_${config.id}_idle_01`);
     scene.add.existing(this);
-    scene.physics.add.existing(this);
+    scene.physics.add.existing(this); 
 
     this.config = config;
     this.setOrigin(config.originX, config.originY);
     this.setScale(2);
     (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
+    // Create the dash-dust effect sprite
     this.dustSprite = scene.add.sprite(x, y, 'dust_dash-dust_01');
     this.dustSprite.setVisible(false);
 
@@ -46,8 +53,11 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
       down:  kb.addKey(Phaser.Input.Keyboard.KeyCodes.S),
       left:  kb.addKey(Phaser.Input.Keyboard.KeyCodes.A),
       right: kb.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-      jump:  kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+      jump:   kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+      dash:   kb.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT),
+      switch: kb.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
     };
+    this.scene.input.on('pointerdown', () => this.fireWeapon());
   }
 
   update(): void {
@@ -56,39 +66,52 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.jump)) {
         this.jump();
       }
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.dash)) {
+        this.dash();
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.switch)) {
+        this.switchWeapon();
+      }
     }
-    this.equippedWeapon?.update();
-    this.dustSprite?.setPosition(this.x, this.y);
+    this.weapons[this.activeWeaponIndex]?.update();
+    this.dustSprite?.setPosition(this.x + this.dustOffsetX, this.y + 13);
   }
 
+  // Steering character and playing run/idle animations
   private handleMovement(): void {
-    if (!this.cursors || !this.isAlive || this.isDashing || this.isJumping) return;
+    if (!this.cursors || !this.isAlive || this.isDashing) return;
 
+    // Grab physics body and set up velocity variables
     const body = this.body as Phaser.Physics.Arcade.Body;
     let vx = 0;
     let vy = 0;
     const speed = this.config.speed;
 
+    // Update character speed based on keypress
     if (this.cursors.left.isDown)  vx -= speed;
     if (this.cursors.right.isDown) vx += speed;
     if (this.cursors.up.isDown)    vy -= speed;
     if (this.cursors.down.isDown)  vy += speed;
 
-    if (vx !== 0 && vy !== 0) {
-      const f = 1 / Math.SQRT2;
-      vx *= f;
-      vy *= f;
-    }
-
-    body.setVelocity(vx, vy);
-
+    // Flip sprite in appropriate direction
     if (vx < 0) this.setFlipX(true);
     else if (vx > 0) this.setFlipX(false);
 
-    if (vx !== 0 || vy !== 0) {
-      this.playAnimation('run');
-    } else {
-      this.playAnimation('idle');
+    // Bring speed back down to 220 when moving diagonally
+    if (vx !== 0 && vy !== 0) {
+      const f = 1 / Math.SQRT2; // Because √(a² + b²) = c
+      vx *= f;
+      vy *= f;
+    }
+    body.setVelocity(vx, vy);
+
+    // Allows steering character mid-jump
+    if (!this.isJumping) {
+      if (vx !== 0 || vy !== 0) {
+        this.playAnimation('run');
+      } else {
+        this.playAnimation('idle');
+      }
     }
   }
 
@@ -105,10 +128,11 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     const jumpAnim = this.config.anims.jump;
     const halfDuration = (jumpAnim.frameCount / jumpAnim.frameRate) * 500;
 
-    (this.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
-    this.currentState = 'idle'; // allow transition
+
+    (this.body as Phaser.Physics.Arcade.Body);
     this.playAnimation('jump');
 
+    // Create scaling animation on hero during jump
     this.scene.tweens.add({
       targets: this,
       scaleX: JUMP_SCALE_PEAK,
@@ -120,25 +144,33 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
 
     this.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
       this.isJumping = false;
-      this.setScale(2);
-      this.currentState = 'jump'; // allow transition back to idle
-      this.playAnimation('idle');
     });
   }
 
-  dash(directionX: number): void {
-    if (this.isDashing || this.isJumping || !this.isAlive) return;
+  dash(): void {
+    if (this.isDashing || this.isJumping || !this.isAlive || !this.cursors) return;
     this.isDashing = true;
 
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setVelocityX(directionX * DASH_SPEED);
-    this.setFlipX(directionX < 0);
+    // Determine dash direction from held keys, falling back to facing direction
+    let dirX = 0;
+    let dirY = 0;
+    if (this.cursors.left.isDown)       dirX = -1;
+    else if (this.cursors.right.isDown) dirX =  1;
+    if (this.cursors.up.isDown)         dirY = -1;
+    else if (this.cursors.down.isDown)  dirY =  1;
+    if (dirX === 0 && dirY === 0)       dirX = this.flipX ? -1 : 1;
 
-    this.currentState = 'idle'; // allow transition
+    // Normalize speed for diagonal movement
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    const scale = (dirX !== 0 && dirY !== 0) ? 1 / Math.SQRT2 : 1;
+    body.setVelocity(dirX * DASH_SPEED * scale, dirY * DASH_SPEED * scale);
+
     this.playAnimation('dash');
 
     if (this.dustSprite) {
-      this.dustSprite.setVisible(true).setPosition(this.x, this.y);
+      this.dustOffsetX = dirX >= 0 ? -30 : 30;
+      this.dustSprite.setFlipX(dirX < 0);
+      this.dustSprite.setVisible(true).setPosition(this.x + this.dustOffsetX, this.y + 13);
       this.dustSprite.play('dust_dash-dust', true);
       this.dustSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
         this.dustSprite?.setVisible(false);
@@ -158,18 +190,26 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     this.isJumping = false;
     this.setScale(2);
     (this.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
-    this.currentState = 'idle'; // allow transition
+    this.currentState = 'idle'; 
     this.playAnimation('death');
   }
 
-  equipWeapon(weapon: Weapon): void {
-    this.equippedWeapon?.detach();
-    this.equippedWeapon = weapon;
-    weapon.attach(this);
+  equipWeapons(weapons: Weapon[]): void {
+    this.weapons.forEach(w => w.detach());
+    this.weapons = weapons;
+    this.activeWeaponIndex = 0;
+    weapons[0]?.attach(this);
+  }
+
+  switchWeapon(): void {
+    if (this.weapons.length < 2) return;
+    this.weapons[this.activeWeaponIndex].detach();
+    this.activeWeaponIndex = (this.activeWeaponIndex + 1) % this.weapons.length;
+    this.weapons[this.activeWeaponIndex].attach(this);
   }
 
   fireWeapon(): void {
-    this.equippedWeapon?.fire();
+    this.weapons[this.activeWeaponIndex]?.fire();
   }
 
   heal(amount: number): void {

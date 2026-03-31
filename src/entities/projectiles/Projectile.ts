@@ -26,6 +26,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     );
   }
 
+  // Deactivates projectile once lifespan has reached max
   preUpdate(time: number, delta: number): void {
     super.preUpdate(time, delta);
     if (!this.active) return;

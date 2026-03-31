@@ -8,8 +8,8 @@ import type { HeroState } from '../types';
 const HERO_STATES: HeroState[] = ['idle', 'run', 'jump', 'dash', 'death', 'select'];
 
 export class PreloadScene extends Phaser.Scene {
-  // Stores ordered texture key arrays per animation key, built during preload()
-  // and consumed in create() to register Phaser animations.
+  // Stores array of loaded animation frames for each animation
+  // Built during preload() and consumed in create() 
   private frameKeyMap = new Map<string, string[]>();
 
   constructor() {
@@ -31,11 +31,11 @@ export class PreloadScene extends Phaser.Scene {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  private storeKey(animKey: string, textureKey: string): void {
+  private storeKey(animKey: string, frameKey: string): void {
     if (!this.frameKeyMap.has(animKey)) {
       this.frameKeyMap.set(animKey, []);
     }
-    this.frameKeyMap.get(animKey)!.push(textureKey);
+    this.frameKeyMap.get(animKey)!.push(frameKey);
   }
 
   // ─── Loading ──────────────────────────────────────────────────────────────
@@ -46,13 +46,13 @@ export class PreloadScene extends Phaser.Scene {
         const animKey = `hero_${cfg.id}_${state}`;
 
         for (let i = 1; i <= cfg.anims[state].frameCount; i++) {
-          // Create texture key
+          // Create frame key
           const n = String(i).padStart(2, '0');
-          const textureKey = `hero_${cfg.id}_${state}_${n}`;
+          const frameKey = `${animKey}_${n}`;
 
           // Load image 
-          this.load.image(textureKey, `assets/heroes/hero-${cfg.id}/${state}/${textureKey}.png`);
-          this.storeKey(animKey, textureKey);
+          this.load.image(frameKey, `assets/heroes/hero-${cfg.id}/${state}/${frameKey}.png`);
+          this.storeKey(animKey, frameKey);
         }
       }
     }
@@ -63,13 +63,14 @@ export class PreloadScene extends Phaser.Scene {
       const animKey = `dust_${cfg.id}`;
 
       for (let i = 1; i <= cfg.frameCount; i++) {
-        // Create the texture key
+        // Create the frame key
         const n = String(i).padStart(2, '0');
-        const textureKey = `${animKey}_${n}`;
+        const frameKey = `${animKey}_${n}`;
 
         // Load image
-        this.load.image(textureKey, `assets/effects/${cfg.id}/${textureKey}.png`);
-        this.storeKey(animKey, textureKey);
+        const fileName = `${cfg.filePrefix ?? animKey}_${n}`;
+        this.load.image(frameKey, `assets/effects/${cfg.id}/${fileName}.png`);
+        this.storeKey(animKey, frameKey);
       }
     }
   }
@@ -79,21 +80,21 @@ export class PreloadScene extends Phaser.Scene {
       const animKey = `weapon_${cfg.id}`;
 
       for (let i = 1; i <= cfg.frameCount; i++) {
-        // Create the texture key
+        // Create the frame key
         const n = String(i).padStart(2, '0');
-        const textureKey = `weapon_${cfg.id}_${n}`;
+        const frameKey = `${animKey}_${n}`;
 
         // Load image
-        this.load.image(textureKey, `assets/weapons/${cfg.id}/${textureKey}.png`);
-        this.storeKey(animKey, textureKey);
+        this.load.image(frameKey, `assets/weapons/${cfg.id}/${frameKey}.png`);
+        this.storeKey(animKey, frameKey);
       }
     }
   }
 
   private loadBullets(): void {
     for (const cfg of WEAPON_CONFIGS) {
-      if (cfg.bulletTextureKey) {
-        this.load.image(cfg.bulletTextureKey, `assets/weapons/bullets/${cfg.bulletTextureKey}.png`);
+      if (cfg.bulletFrameKey) {
+        this.load.image(cfg.bulletFrameKey, `assets/weapons/bullets/${cfg.bulletFrameKey}.png`);
       }
     }
   }
@@ -103,13 +104,13 @@ export class PreloadScene extends Phaser.Scene {
       const animKey = `effect_${cfg.id}`;
 
       for (let i = 1; i <= cfg.frameCount; i++) {
-        // Create texture key
+        // Create frame key
         const n = String(i).padStart(2, '0');
-        const textureKey = `effect_${cfg.id}_${n}`;
+        const frameKey = `${animKey}_${n}`;
 
         // Load image
-        this.load.image(textureKey, `assets/buffs/${cfg.id}/${textureKey}.png`);
-        this.storeKey(animKey, textureKey);
+        this.load.image(frameKey, `assets/buffs/${cfg.id}/${frameKey}.png`);
+        this.storeKey(animKey, frameKey);
       }
     }
   }
@@ -126,10 +127,14 @@ export class PreloadScene extends Phaser.Scene {
   private registerHeroAnimations(): void {
     for (const cfg of HERO_CONFIGS) {
       for (const state of HERO_STATES) {
+        // Retrieve array of frames for animation
         const animKey = `hero_${cfg.id}_${state}`;
         const frames = this.frameKeyMap.get(animKey);
+
         if (!frames) continue;
         const animDef = cfg.anims[state];
+
+        // Create animation
         this.anims.create({
           key: animKey,
           frames: frames.map(k => ({ key: k })),
@@ -142,9 +147,13 @@ export class PreloadScene extends Phaser.Scene {
 
   private registerDustAnimation(): void {
     for (const cfg of DUST_CONFIGS) {
+      // Retrieve array frames for animation
       const animKey = `dust_${cfg.id}`;
       const frames = this.frameKeyMap.get(animKey);
+
       if (!frames) continue;
+
+      // Create animation 
       this.anims.create({
         key: animKey,
         frames: frames.map(k => ({ key: k })),
@@ -156,23 +165,31 @@ export class PreloadScene extends Phaser.Scene {
 
   private registerWeaponAnimations(): void {
     for (const cfg of WEAPON_CONFIGS) {
+      // Retrieve array of frames for animation
       const animKey = `weapon_${cfg.id}`;
       const frames = this.frameKeyMap.get(animKey);
+
       if (!frames) continue;
+
+      // Create animation
       this.anims.create({
         key: animKey,
         frames: frames.map(k => ({ key: k })),
         frameRate: cfg.frameRate,
-        repeat: -1,
+        repeat: 0,
       });
     }
   }
 
   private registerEffectAnimations(): void {
     for (const cfg of BUFF_CONFIGS) {
+      // Retrieve array of frames for animation
       const animKey = `effect_${cfg.id}`;
       const frames = this.frameKeyMap.get(animKey);
+
       if (!frames) continue;
+
+      // Create animation
       this.anims.create({
         key: animKey,
         frames: frames.map(k => ({ key: k })),

@@ -15,22 +15,26 @@ export class RangedWeapon extends Weapon {
   }
 
   fire(): void {
-    if (!this.host || !this.config.bulletTextureKey) return;
+    if (!this.host || !this.config.bulletFrameKey) return;
+
+    this.sprite.play(`weapon_${this.config.id}`, true);
+    this.sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      this.sprite.setTexture(`weapon_${this.config.id}_01`);
+    });
 
     const count = this.config.projectileCount ?? 1;
     const spread = this.config.spreadDeg ?? 0;
     const baseAngle = this.host.flipX ? 180 : 0;
     const projConfig: ProjectileConfig = {
-      textureKey: this.config.bulletTextureKey,
+      textureKey: this.config.bulletFrameKey,
       speed: this.config.projectileSpeed ?? 400,
       damage: this.config.damage,
       lifespan: 2000,
     };
 
+    // Fire projectiles evenly across a cone
     for (let i = 0; i < count; i++) {
-      const angleOffset = count > 1
-        ? (i - (count - 1) / 2) * (spread / (count - 1))
-        : 0;
+      const angleOffset = count > 1 ? (i - (count - 1) / 2) * (spread / (count - 1)) : 0;
       const angle = baseAngle + angleOffset;
       const proj = this.projectileGroup.get(this.host.x, this.host.y) as Projectile | null;
       if (proj) {

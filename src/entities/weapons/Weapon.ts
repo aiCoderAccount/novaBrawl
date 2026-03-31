@@ -18,13 +18,15 @@ export abstract class Weapon {
     this.scene = scene;
     this.config = config;
     this.sprite = scene.add.sprite(0, 0, `weapon_${config.id}_01`);
+    this.sprite.setOrigin(config.originX ?? 0.5, config.originY ?? 0.5);
+    this.sprite.setScale(1.3);
     this.sprite.setVisible(false);
   }
 
   attach(hero: IHeroRef): void {
     this.host = hero;
     this.sprite.setVisible(true);
-    this.sprite.play(`weapon_${this.config.id}`, true);
+    this.sprite.setTexture(`weapon_${this.config.id}_01`);
     this.updateSpritePosition();
   }
 
@@ -38,15 +40,16 @@ export abstract class Weapon {
     if (this.host) {
       this.updateSpritePosition();
       this.sprite.setFlipX(this.host.flipX);
+      const ox = this.config.originX ?? 0.5;
+      this.sprite.setOrigin(this.host.flipX ? 1 - ox : ox, this.config.originY ?? 0.5);
     }
   }
 
+  // Position weapon sprite at a fixed offset from the hero's anchor point
   private updateSpritePosition(): void {
     if (!this.host) return;
-    const offsetX = this.host.flipX
-      ? -(this.host.displayWidth / 2 + 8)
-      : this.host.displayWidth / 2 + 8;
-    this.sprite.setPosition(this.host.x + offsetX, this.host.y);
+    const offsetX = this.host.flipX ? -6 : 6;
+    this.sprite.setPosition(this.host.x + offsetX, this.host.y + 10);
   }
 
   abstract fire(): void;
