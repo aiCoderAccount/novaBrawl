@@ -4,8 +4,7 @@ import type { WeaponConfig } from '../../types';
 export interface IHeroRef {
   x: number;
   y: number;
-  flipX: boolean;
-  displayWidth: number;
+  facingLeft: boolean;
 }
 
 export abstract class Weapon {
@@ -17,17 +16,21 @@ export abstract class Weapon {
   constructor(scene: Phaser.Scene, config: WeaponConfig) {
     this.scene = scene;
     this.config = config;
-    this.sprite = scene.add.sprite(0, 0, `weapon_${config.id}_01`);
+    // Create sprite without adding to scene display list — added as a container child via addToContainer()
+    this.sprite = new Phaser.GameObjects.Sprite(scene, 6, 10, `weapon_${config.id}_01`);
     this.sprite.setOrigin(config.originX ?? 0.5, config.originY ?? 0.5);
     this.sprite.setScale(1.3);
     this.sprite.setVisible(false);
+  }
+
+  addToContainer(container: Phaser.GameObjects.Container): void {
+    container.add(this.sprite);
   }
 
   attach(hero: IHeroRef): void {
     this.host = hero;
     this.sprite.setVisible(true);
     this.sprite.setTexture(`weapon_${this.config.id}_01`);
-    this.updateSpritePosition();
   }
 
   detach(): void {
@@ -36,20 +39,13 @@ export abstract class Weapon {
     this.sprite.stop();
   }
 
+  // Sync local offset and flip to match hero facing direction
   update(): void {
     if (this.host) {
-      this.updateSpritePosition();
-      this.sprite.setFlipX(this.host.flipX);
-      const ox = this.config.originX ?? 0.5;
-      this.sprite.setOrigin(this.host.flipX ? 1 - ox : ox, this.config.originY ?? 0.5);
+      const offsetX = this.host.facingLeft ? -6 : 6;
+      this.sprite.setPosition(offsetX, 10);
+      this.sprite.setFlipX(this.host.facingLeft);
     }
-  }
-
-  // Position weapon sprite at a fixed offset from the hero's anchor point
-  private updateSpritePosition(): void {
-    if (!this.host) return;
-    const offsetX = this.host.flipX ? -6 : 6;
-    this.sprite.setPosition(this.host.x + offsetX, this.host.y + 10);
   }
 
   abstract fire(): void;

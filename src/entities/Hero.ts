@@ -5,8 +5,10 @@ import type { Weapon } from './weapons/Weapon';
 const DASH_SPEED = 400;
 const JUMP_SCALE_PEAK = 2.2;
 
-export class Hero extends Phaser.Physics.Arcade.Sprite {
+export class Hero extends Phaser.GameObjects.Container {
   readonly config: HeroConfig;
+
+  private heroSprite: Phaser.GameObjects.Sprite;
 
   // Instance variables and starting values
   private currentState: HeroState = 'idle';
@@ -29,22 +31,39 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     switch: Phaser.Input.Keyboard.Key;
   } | null = null;
 
+  get facingLeft(): boolean {
+    return this.heroSprite.flipX;
+  }
+
   constructor(scene: Phaser.Scene, x: number, y: number, config: HeroConfig) {
-    // Create and register the sprite
-    super(scene, x, y, `hero_${config.id}_idle_01`);
+    super(scene, x, y);
     scene.add.existing(this);
-    scene.physics.add.existing(this); 
+    scene.physics.add.existing(this);
 
     this.config = config;
-    this.setOrigin(config.originX, config.originY);
-    this.setScale(2);
-    (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
-    // Create the dash-dust effect sprite
-    this.dustSprite = scene.add.sprite(x, y, 'dust_dash-dust_01');
+    // Hero sprite at local (0, 0) — origin anchors it to the container position
+    this.heroSprite = new Phaser.GameObjects.Sprite(scene, 0, 0, `hero_${config.id}_idle_01`);
+    this.heroSprite.setOrigin(config.originX, config.originY);
+    this.heroSprite.setScale(2);
+
+    // Dust sprite at local (0, 13) — x-offset updated at dash start
+    this.dustSprite = new Phaser.GameObjects.Sprite(scene, 0, 13, 'dust_dash-dust_01');
     this.dustSprite.setVisible(false);
 
-    this.play(`hero_${config.id}_idle`, true);
+    // Render order: dust behind, hero sprite in front
+    this.add([this.dustSprite, this.heroSprite]);
+
+    // Size the physics body to match the hero sprite's visual area
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    const w = this.heroSprite.displayWidth;
+    const h = this.heroSprite.displayHeight;
+    body.setSize(w, h);
+    body.setOffset(-config.originX * w, -config.originY * h);
+    body.setCollideWorldBounds(true);
+    console.log(`Hero physics body — size: ${body.width}x${body.height}, offset: (${body.offset.x.toFixed(1)}, ${body.offset.y.toFixed(1)})`);
+
+    this.heroSprite.play(`hero_${config.id}_idle`, true);
   }
 
   initCursors(kb: Phaser.Input.Keyboard.KeyboardPlugin): void {
@@ -74,7 +93,6 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
       }
     }
     this.weapons[this.activeWeaponIndex]?.update();
-    this.dustSprite?.setPosition(this.x + this.dustOffsetX, this.y + 13);
   }
 
   // Steering character and playing run/idle animations
@@ -94,8 +112,8 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     if (this.cursors.down.isDown)  vy += speed;
 
     // Flip sprite in appropriate direction
-    if (vx < 0) this.setFlipX(true);
-    else if (vx > 0) this.setFlipX(false);
+    if (vx < 0) this.heroSprite.setFlipX(true);
+    else if (vx > 0) this.heroSprite.setFlipX(false);
 
     // Bring speed back down to 220 when moving diagonally
     if (vx !== 0 && vy !== 0) {
@@ -118,7 +136,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
   playAnimation(state: HeroState): void {
     if (this.currentState === state) return;
     this.currentState = state;
-    this.play(`hero_${this.config.id}_${state}`, true);
+    this.heroSprite.play(`hero_${this.config.id}_${state}`, true);
   }
 
   jump(): void {
@@ -128,13 +146,11 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     const jumpAnim = this.config.anims.jump;
     const halfDuration = (jumpAnim.frameCount / jumpAnim.frameRate) * 500;
 
-
-    (this.body as Phaser.Physics.Arcade.Body);
     this.playAnimation('jump');
 
-    // Create scaling animation on hero during jump
+    // Scale tween targets only the hero sprite, not the container
     this.scene.tweens.add({
-      targets: this,
+      targets: this.heroSprite,
       scaleX: JUMP_SCALE_PEAK,
       scaleY: JUMP_SCALE_PEAK,
       duration: halfDuration,
@@ -142,7 +158,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
       ease: 'Sine.easeInOut',
     });
 
-    this.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+    this.heroSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
       this.isJumping = false;
     });
   }
@@ -158,7 +174,7 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     else if (this.cursors.right.isDown) dirX =  1;
     if (this.cursors.up.isDown)         dirY = -1;
     else if (this.cursors.down.isDown)  dirY =  1;
-    if (dirX === 0 && dirY === 0)       dirX = this.flipX ? -1 : 1;
+    if (dirX === 0 && dirY === 0)       dirX = this.facingLeft ? -1 : 1;
 
     // Normalize speed for diagonal movement
     const body = this.body as Phaser.Physics.Arcade.Body;
@@ -170,14 +186,16 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     if (this.dustSprite) {
       this.dustOffsetX = dirX >= 0 ? -30 : 30;
       this.dustSprite.setFlipX(dirX < 0);
-      this.dustSprite.setVisible(true).setPosition(this.x + this.dustOffsetX, this.y + 13);
+      this.dustSprite.setVisible(true);
+      // Update local x-offset to match dash direction; y stays fixed at 13
+      this.dustSprite.setPosition(this.dustOffsetX, 13);
       this.dustSprite.play('dust_dash-dust', true);
       this.dustSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
         this.dustSprite?.setVisible(false);
       });
     }
 
-    this.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+    this.heroSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
       this.isDashing = false;
       this.currentState = 'dash'; // allow transition back to idle
       this.playAnimation('idle');
@@ -188,9 +206,9 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     if (!this.isAlive) return;
     this.isAlive = false;
     this.isJumping = false;
-    this.setScale(2);
+    this.heroSprite.setScale(2);
     (this.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
-    this.currentState = 'idle'; 
+    this.currentState = 'idle';
     this.playAnimation('death');
   }
 
@@ -198,6 +216,8 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     this.weapons.forEach(w => w.detach());
     this.weapons = weapons;
     this.activeWeaponIndex = 0;
+    // Add all weapon sprites to the container once — they render in front of the hero sprite
+    weapons.forEach(w => w.addToContainer(this));
     weapons[0]?.attach(this);
   }
 
@@ -217,4 +237,3 @@ export class Hero extends Phaser.Physics.Arcade.Sprite {
     void amount;
   }
 }
-
