@@ -58,3 +58,8 @@ export interface DustConfig {
   frameRate: number;
   repeat: number;
 }
+
+export interface AttachmentPoint {
+  x: number;
+  y: number;
+}

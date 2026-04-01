@@ -4,6 +4,7 @@ import { WEAPON_CONFIGS } from '../config/WeaponConfigs';
 import { BUFF_CONFIGS } from '../config/BuffConfigs';
 import { DUST_CONFIGS } from '../config/DustConfigs';
 import type { HeroState } from '../types';
+import { scanHeroAttachmentPoints } from '../utils/AttachmentPointScanner';
 
 const HERO_STATES: HeroState[] = ['idle', 'run', 'jump', 'dash', 'death', 'select'];
 
@@ -25,6 +26,7 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create(): void {
+    scanHeroAttachmentPoints(this, this.frameKeyMap);
     this.registerAnimations();
     this.scene.start('GameScene');
   }

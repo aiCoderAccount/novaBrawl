@@ -32,10 +32,10 @@ export class RangedWeapon extends Weapon {
       lifespan: 2000,
     };
 
-    // World-space spawn position: container origin + weapon local offset
-    const offsetX = this.host.facingLeft ? -6 : 6;
-    const spawnX = this.host.x + offsetX;
-    const spawnY = this.host.y + 17; // weapon local y (10) + extra vertical offset (7)
+    // World-space spawn position: container origin + attachment-point local offset
+    const localPos = this.getAttachmentLocalPosition();
+    const spawnX = this.host.x + (localPos?.x ?? (this.host.facingLeft ? -6 : 6));
+    const spawnY = this.host.y + (localPos?.y ?? 17);
 
     for (let i = 0; i < count; i++) {
       const angleOffset = count > 1 ? (i - (count - 1) / 2) * (spread / (count - 1)) : 0;

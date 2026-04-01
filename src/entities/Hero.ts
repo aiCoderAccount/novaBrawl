@@ -35,6 +35,30 @@ export class Hero extends Phaser.GameObjects.Container {
     return this.heroSprite.flipX;
   }
 
+  get currentFrameKey(): string {
+    return this.heroSprite.texture.key;
+  }
+
+  get spriteOriginX(): number {
+    return this.config.originX;
+  }
+
+  get spriteOriginY(): number {
+    return this.config.originY;
+  }
+
+  get spriteScale(): number {
+    return this.heroSprite.scaleX;
+  }
+
+  get spriteRawWidth(): number {
+    return this.heroSprite.width;
+  }
+
+  get spriteRawHeight(): number {
+    return this.heroSprite.height;
+  }
+
   constructor(scene: Phaser.Scene, x: number, y: number, config: HeroConfig) {
     super(scene, x, y);
     scene.add.existing(this);

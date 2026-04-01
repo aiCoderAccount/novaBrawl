@@ -1,10 +1,17 @@
 import Phaser from 'phaser';
 import type { WeaponConfig } from '../../types';
+import { getAttachmentPoint } from '../../utils/AttachmentPointCache';
 
 export interface IHeroRef {
   x: number;
   y: number;
   facingLeft: boolean;
+  currentFrameKey: string;
+  spriteOriginX: number;
+  spriteOriginY: number;
+  spriteScale: number;
+  spriteRawWidth: number;
+  spriteRawHeight: number;
 }
 
 export abstract class Weapon {
@@ -39,11 +46,36 @@ export abstract class Weapon {
     this.sprite.stop();
   }
 
-  // Sync local offset and flip to match hero facing direction
+  // Returns the container-local position of the attachment point for the current frame,
+  // accounting for origin, scale, and facing direction. Returns null if no marker is cached.
+  protected getAttachmentLocalPosition(): { x: number; y: number } | null {
+    if (!this.host) return null;
+    const point = getAttachmentPoint(this.host.currentFrameKey);
+    if (!point) return null;
+
+    const ox = this.host.spriteOriginX;
+    const oy = this.host.spriteOriginY;
+    const rawW = this.host.spriteRawWidth;
+    const rawH = this.host.spriteRawHeight;
+    const s = this.host.spriteScale;
+
+    const xOffset = (point.x - ox * rawW) * s;
+    const localX = this.host.facingLeft ? -xOffset : xOffset;
+    const localY = (point.y - oy * rawH) * s;
+
+    return { x: localX, y: localY };
+  }
+
+  // Sync local position and flip to match the hero's current animation frame marker
   update(): void {
     if (this.host) {
-      const offsetX = this.host.facingLeft ? -6 : 6;
-      this.sprite.setPosition(offsetX, 10);
+      const pos = this.getAttachmentLocalPosition();
+      if (pos) {
+        this.sprite.setPosition(pos.x, pos.y);
+      } else {
+        const offsetX = this.host.facingLeft ? -6 : 6;
+        this.sprite.setPosition(offsetX, 10);
+      }
       this.sprite.setFlipX(this.host.facingLeft);
     }
   }
