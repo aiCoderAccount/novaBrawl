@@ -9,7 +9,7 @@ export class MeleeWeapon extends Weapon {
     super(scene, config);
   }
 
-  fire(): void {
+  fire(_pointer: Phaser.Input.Pointer): void {
     if (this.isSwinging) return;
     this.isSwinging = true;
     this.sprite.play(`weapon_${this.config.id}`, true);

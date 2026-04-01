@@ -100,7 +100,7 @@ export class Hero extends Phaser.GameObjects.Container {
       dash:   kb.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT),
       switch: kb.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
     };
-    this.scene.input.on('pointerdown', () => this.fireWeapon());
+    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.fireWeapon(pointer));
   }
 
   update(): void {
@@ -117,6 +117,11 @@ export class Hero extends Phaser.GameObjects.Container {
       }
     }
     this.weapons[this.activeWeaponIndex]?.update();
+
+    const activeWeapon = this.weapons[this.activeWeaponIndex];
+    if (activeWeapon?.config.fireRateMs && this.scene.input.activePointer.isDown) {
+      activeWeapon.fire(this.scene.input.activePointer);
+    }
   }
 
   // Steering character and playing run/idle animations
@@ -252,8 +257,8 @@ export class Hero extends Phaser.GameObjects.Container {
     this.weapons[this.activeWeaponIndex].attach(this);
   }
 
-  fireWeapon(): void {
-    this.weapons[this.activeWeaponIndex]?.fire();
+  fireWeapon(pointer: Phaser.Input.Pointer): void {
+    this.weapons[this.activeWeaponIndex]?.fire(pointer);
   }
 
   heal(amount: number): void {

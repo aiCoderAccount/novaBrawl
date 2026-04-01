@@ -1,5 +1,5 @@
 export type HeroState = 'idle' | 'run' | 'jump' | 'dash' | 'death' | 'select';
-export type WeaponType = 'ranged' | 'melee';
+export type WeaponType = 'ranged' | 'melee' | 'beam';
 export type EffectType = 'buff' | 'healing';
 
 export interface HeroAnimDef {
@@ -30,15 +30,24 @@ export interface WeaponConfig {
   projectileCount?: number;
   spreadDeg?: number;
   swingDurationMs?: number;
+  fireRateMs?: number;
   originX?: number;
   originY?: number;
+  offsetX?: number;
+  beamDurationMs?: number;
+  lifespanMs?: number;
+  muzzleSmoke?: boolean;
+  bulletTrail?: boolean;
+  projectileScale?: number;
 }
 
 export interface ProjectileConfig {
   textureKey: string;
   speed: number;
   damage: number;
-  lifespan: number;       
+  lifespan: number;
+  trailParticles?: boolean;
+  scale?: number;
 }
 
 export interface BuffConfig {
