@@ -6,6 +6,10 @@ import { Projectile } from '../projectiles/Projectile';
 export class RangedWeapon extends Weapon {
   private projectileGroup: Phaser.GameObjects.Group;
 
+  get projectiles(): Phaser.GameObjects.Group {
+    return this.projectileGroup;
+  }
+
   constructor(scene: Phaser.Scene, config: WeaponConfig) {
     super(scene, config);
     this.projectileGroup = scene.add.group({
@@ -57,7 +61,7 @@ export class RangedWeapon extends Weapon {
   }
 
   private spawnSmokePuffs(x: number, y: number, dirSign: number): void {
-    const PUFF_COUNT = 7;
+    const PUFF_COUNT = this.config.muzzlePuffCount ?? 7;
     const COLORS = [0x999999, 0xaaaaaa, 0x888888, 0xbbbbbb, 0x777777];
 
     for (let i = 0; i < PUFF_COUNT; i++) {

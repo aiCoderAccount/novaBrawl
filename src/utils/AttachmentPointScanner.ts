@@ -34,6 +34,24 @@ export function scanHeroAttachmentPoints(
   }
 }
 
+/**
+ * Scans enemy animation frames for the purple pixel marker (RGB 231, 49, 221)
+ * and stores found coordinates in the attachment point cache. Only stores markers
+ * when found; missing markers are not warned about (most enemy frames have none).
+ * Must be called in PreloadScene.create() after all images are loaded.
+ */
+export function scanEnemyMarkerPoints(
+  scene: Phaser.Scene,
+  frameKeyMap: Map<string, string[]>,
+): void {
+  for (const [animKey, frameKeys] of frameKeyMap) {
+    if (!animKey.startsWith('enemy_')) continue;
+    for (const frameKey of frameKeys) {
+      scanFrame(scene, frameKey);
+    }
+  }
+}
+
 function scanFrame(scene: Phaser.Scene, frameKey: string): boolean {
   const texture = scene.textures.get(frameKey);
   if (!texture) return false;

@@ -31,6 +31,6 @@ export const BUFF_CONFIGS: BuffConfig[] = [
     frameCount: 9,
     frameRate: 10,
     repeat: 0,
-    healAmount: 30,
+    healAmount: 20,
   },
 ];

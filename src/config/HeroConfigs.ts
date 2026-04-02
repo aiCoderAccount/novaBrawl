@@ -9,13 +9,15 @@ export const HERO_CONFIGS: HeroConfig[] = [
 
     originX: 0.45,
     originY: 0.69,
+    hitboxWidth: 22,
+    hitboxHeight: 44,
     anims: {
       idle:   { frameCount: 4,  frameRate: 8,  repeat: -1 },
       run:    { frameCount: 5,  frameRate: 10, repeat: -1 },
       jump:   { frameCount: 10, frameRate: 10, repeat: 0  },
       dash:   { frameCount: 12, frameRate: 30, repeat: 0  },
       death:  { frameCount: 12, frameRate: 8,  repeat: 0  },
-      select: { frameCount: 20, frameRate: 10, repeat: -1 },
+      select: { frameCount: 20, frameRate: 10, repeat: 0 },
     },
   },
   {
@@ -32,7 +34,7 @@ export const HERO_CONFIGS: HeroConfig[] = [
       jump:   { frameCount: 10, frameRate: 10, repeat: 0  },
       dash:   { frameCount: 10, frameRate: 12, repeat: 0  },
       death:  { frameCount: 12, frameRate: 8,  repeat: 0  },
-      select: { frameCount: 20, frameRate: 10, repeat: -1 },
+      select: { frameCount: 20, frameRate: 10, repeat: 0 },
     },
   },
   {
@@ -49,7 +51,7 @@ export const HERO_CONFIGS: HeroConfig[] = [
       jump:   { frameCount: 10, frameRate: 10, repeat: 0  },
       dash:   { frameCount: 10, frameRate: 12, repeat: 0  },
       death:  { frameCount: 12, frameRate: 8,  repeat: 0  },
-      select: { frameCount: 20, frameRate: 10, repeat: -1 },
+      select: { frameCount: 20, frameRate: 10, repeat: 0 },
     },
   },
   {
@@ -66,7 +68,7 @@ export const HERO_CONFIGS: HeroConfig[] = [
       jump:   { frameCount: 11, frameRate: 10, repeat: 0  },
       dash:   { frameCount: 12, frameRate: 12, repeat: 0  },
       death:  { frameCount: 12, frameRate: 8,  repeat: 0  },
-      select: { frameCount: 20, frameRate: 10, repeat: -1 },
+      select: { frameCount: 20, frameRate: 10, repeat: 0 },
     },
   },
   {
@@ -83,7 +85,7 @@ export const HERO_CONFIGS: HeroConfig[] = [
       jump:   { frameCount: 11, frameRate: 10, repeat: 0  },
       dash:   { frameCount: 12, frameRate: 12, repeat: 0  },
       death:  { frameCount: 12, frameRate: 8,  repeat: 0  },
-      select: { frameCount: 20, frameRate: 10, repeat: -1 },
+      select: { frameCount: 20, frameRate: 10, repeat: 0 },
     },
   },
   {
@@ -100,7 +102,7 @@ export const HERO_CONFIGS: HeroConfig[] = [
       jump:   { frameCount: 11, frameRate: 10, repeat: 0  },
       dash:   { frameCount: 12, frameRate: 12, repeat: 0  },
       death:  { frameCount: 12, frameRate: 8,  repeat: 0  },
-      select: { frameCount: 20, frameRate: 10, repeat: -1 },
+      select: { frameCount: 20, frameRate: 10, repeat: 0 },
     },
   },
 ];

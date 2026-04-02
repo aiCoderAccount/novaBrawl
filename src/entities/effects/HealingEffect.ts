@@ -8,13 +8,14 @@ export class HealingEffect extends Effect {
   constructor(scene: Phaser.Scene, target: IEffectTarget, config: BuffConfig) {
     super(scene, target.x, target.y, config);
     this.target = target;
+    this.setScale(2.5);
     this.playEffect();
     this.on(Phaser.Animations.Events.ANIMATION_COMPLETE, this.onComplete, this);
   }
 
   preUpdate(time: number, delta: number): void {
     super.preUpdate(time, delta);
-    this.setPosition(this.target.x, this.target.y);
+    this.setPosition(this.target.x + 10, this.target.y - 20);
   }
 
   onComplete(): void {

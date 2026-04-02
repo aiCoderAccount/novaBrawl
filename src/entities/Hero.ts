@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import type { HeroConfig, HeroState } from '../types';
 import type { Weapon } from './weapons/Weapon';
+import { HealingEffect } from './effects/HealingEffect';
+import { BUFF_CONFIGS } from '../config/BuffConfigs';
 
 const DASH_SPEED = 400;
 const JUMP_SCALE_PEAK = 2.2;
@@ -15,6 +17,10 @@ export class Hero extends Phaser.GameObjects.Container {
   private isDashing = false;
   private isJumping = false;
   private isAlive = true;
+  private isShielded = false;
+  private isHealing = false;
+  private currentHealth = 120;
+  private currentShield = 30;
   private weapons: Weapon[] = [];
   private activeWeaponIndex = 0;
   private dustSprite: Phaser.GameObjects.Sprite | null = null;
@@ -29,7 +35,25 @@ export class Hero extends Phaser.GameObjects.Container {
     jump: Phaser.Input.Keyboard.Key;
     dash: Phaser.Input.Keyboard.Key;
     switch: Phaser.Input.Keyboard.Key;
+    heal: Phaser.Input.Keyboard.Key;
+    shield: Phaser.Input.Keyboard.Key;
   } | null = null;
+
+  get health(): number {
+    return this.currentHealth;
+  }
+
+  get maxHealth(): number {
+    return 120;
+  }
+
+  get shield(): number {
+    return this.currentShield;
+  }
+
+  get maxShield(): number {
+    return 30;
+  }
 
   get facingLeft(): boolean {
     return this.heroSprite.flipX;
@@ -78,10 +102,10 @@ export class Hero extends Phaser.GameObjects.Container {
     // Render order: dust behind, hero sprite in front
     this.add([this.dustSprite, this.heroSprite]);
 
-    // Size the physics body to match the hero sprite's visual area
+    // Size the physics body — use explicit hitbox dims if provided, else full sprite
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const w = this.heroSprite.displayWidth;
-    const h = this.heroSprite.displayHeight;
+    const w = config.hitboxWidth ?? this.heroSprite.displayWidth;
+    const h = config.hitboxHeight ?? this.heroSprite.displayHeight;
     body.setSize(w, h);
     body.setOffset(-config.originX * w, -config.originY * h);
     body.setCollideWorldBounds(true);
@@ -99,6 +123,8 @@ export class Hero extends Phaser.GameObjects.Container {
       jump:   kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
       dash:   kb.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT),
       switch: kb.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
+      heal:   kb.addKey(Phaser.Input.Keyboard.KeyCodes.E),
+      shield: kb.addKey(Phaser.Input.Keyboard.KeyCodes.F),
     };
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.fireWeapon(pointer));
   }
@@ -115,18 +141,30 @@ export class Hero extends Phaser.GameObjects.Container {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.switch)) {
         this.switchWeapon();
       }
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.heal)) {
+        this.activateHeal();
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.shield)) {
+        this.activateShield();
+      }
     }
-    this.weapons[this.activeWeaponIndex]?.update();
+    if (this.isAlive) {
+      this.weapons[this.activeWeaponIndex]?.update();
 
-    const activeWeapon = this.weapons[this.activeWeaponIndex];
-    if (activeWeapon?.config.fireRateMs && this.scene.input.activePointer.isDown) {
-      activeWeapon.fire(this.scene.input.activePointer);
+      const activeWeapon = this.weapons[this.activeWeaponIndex];
+      if (!this.isShielded && !this.isHealing && activeWeapon?.config.fireRateMs && this.scene.input.activePointer.isDown) {
+        activeWeapon.fire(this.scene.input.activePointer);
+      }
     }
   }
 
   // Steering character and playing run/idle animations
   private handleMovement(): void {
     if (!this.cursors || !this.isAlive || this.isDashing) return;
+    if (this.isShielded) {
+      (this.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+      return;
+    }
 
     // Grab physics body and set up velocity variables
     const body = this.body as Phaser.Physics.Arcade.Body;
@@ -169,7 +207,7 @@ export class Hero extends Phaser.GameObjects.Container {
   }
 
   jump(): void {
-    if (this.isJumping || this.isDashing || !this.isAlive) return;
+    if (this.isJumping || this.isDashing || !this.isAlive || this.isShielded) return;
     this.isJumping = true;
 
     const jumpAnim = this.config.anims.jump;
@@ -193,7 +231,7 @@ export class Hero extends Phaser.GameObjects.Container {
   }
 
   dash(): void {
-    if (this.isDashing || this.isJumping || !this.isAlive || !this.cursors) return;
+    if (this.isDashing || this.isJumping || !this.isAlive || !this.cursors || this.isShielded) return;
     this.isDashing = true;
 
     // Determine dash direction from held keys, falling back to facing direction
@@ -239,6 +277,7 @@ export class Hero extends Phaser.GameObjects.Container {
     (this.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
     this.currentState = 'idle';
     this.playAnimation('death');
+    this.weapons[this.activeWeaponIndex]?.detach();
   }
 
   equipWeapons(weapons: Weapon[]): void {
@@ -258,11 +297,42 @@ export class Hero extends Phaser.GameObjects.Container {
   }
 
   fireWeapon(pointer: Phaser.Input.Pointer): void {
+    if (!this.isAlive || this.isShielded || this.isHealing) return;
     this.weapons[this.activeWeaponIndex]?.fire(pointer);
   }
 
+  private activateHeal(): void {
+    if (!this.isAlive || this.isHealing) return;
+    this.isHealing = true;
+    const healingConfig = BUFF_CONFIGS.find(c => c.id === 'healing')!;
+    new HealingEffect(this.scene, this, healingConfig);
+  }
+
+  private activateShield(): void {
+    if (!this.isAlive || this.isShielded) return;
+    this.isShielded = true;
+    this.currentState = 'idle'; // allow transition into select
+    this.playAnimation('select');
+    this.heroSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      this.isShielded = false;
+      this.currentState = 'select'; // allow transition back to idle
+      this.playAnimation('idle');
+    });
+  }
+
+  takeDamage(amount: number): void {
+    if (!this.isAlive) return;
+    const shieldAbsorb = Math.min(amount, this.currentShield);
+    this.currentShield -= shieldAbsorb;
+    const remainder = amount - shieldAbsorb;
+    if (remainder > 0) {
+      this.currentHealth = Math.max(0, this.currentHealth - remainder);
+      if (this.currentHealth === 0) this.die();
+    }
+  }
+
   heal(amount: number): void {
-    // Health management to be expanded when game state is added
-    void amount;
+    this.isHealing = false;
+    this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
   }
 }
